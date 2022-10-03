@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    
+</head>
+<body>
+    <style>
+        .grid-container{
+            display: inline-grid;
+            grid-template-columns: 40% 60%;
+        }
+        button{
+            margin: 5px 5px 5px 5px;
+        }
+        .navs{
+            
+            
+            background-color: blueviolet;
+            
+        }
+        
+        p{
+            text-align: center;
+        }
+        footer{
+            background-color: blue;
+        }
+        .trans{
+           
+            background-color: burlywood
+        }
+        ul{
+            padding: 5px 5px 5px 5px;
+            list-style: none;
+            text-decoration: none;
+        }
+        li{
+            padding: 3px 3px 3px 3px;
+        }
+        h1{
+            text-align:center ;
+        }
+       
+        #logout-btn{
+            float: right;
+            margin-top: 10px;
+            margin-right: 10px;
+        }
+        .dis{
+            
+            border: solid;
+            margin: 5px 5px 5px 5px;
+            padding-left: 50px;
+            padding: 5px 5px 5px 5px;
+        }
+        select{
+            margin: 5px 5px 5px 5px;
+            float:right;
+        }
+       
+    </style>
+    
+    <select id="profile-update">
+        <option value="my-p" selected>My Profile</option>
+        <option value="logout">Logout</option>
+        <option value="chng_pass">Change Password</option>
+    </select>
+    
+    <h3 >Welcome: 
+        <span id = 'loggedIn'>
+            <script>
+                var user = `<%= user %>`
+                user = user[0].toUpperCase() + user.slice(1)
+                document.getElementById('loggedIn').textContent = user;
+            </script>
+        </span>
+    </h3>
+    
+    <span id = 'time-stamp'></span>
+
+    <div class = "grid-container">
+        <div class = 'navs'>
+            <button type="button" class="btn btn-primary" id = 'bal-button'>Check Balance</button><strong><span id = 'display-bal'></span></strong>
+            <button id = 'trans-btn' type="button" class="btn btn-primary">My Transactions</button>
+            <button type="button" class="btn btn-primary">Transfer Funds</button>
+        </div>
+
+
+        <div id = 'main' class = 'dis'>
+            <form>
+                <input id = 'account-no' placeholder = "Enter Benificiary acc no" type = "number" required><br><br>
+                <input id = 'amount' type = 'number' placeholder="Enter Amount" required><br><br>  
+                <button id = 'payment-btn' type="button" class="btn btn-primary">Make Transaction</button> 
+            </form>
+            <span id = 'trans-status'></span>
+        </div>
+
+        <div>
+           
+        </div>
+       
+    </div>
+    <table id = 'trans-table' class = 'table'>
+        <thead>
+            <th scope="col">S.No</th>
+            <th scope="col">Date</th>
+            <th scope="col">Account No</th>
+            <th scope="col">Account Holder</th>
+            <th scope="col">Received</th>
+            <th scope="col">Sent</th>
+        </thead>
+    </table>
+    <footer>
+        <p>Made with NodeJs</p>
+    </footer>
+    
+    <script src = "../public/js/dashboard.js"></script>
+</body>
+</html>
