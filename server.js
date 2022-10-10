@@ -1,34 +1,21 @@
-
-
 const express = require('express')
 const ejs = require('ejs')
-
 const app = express()
-
 app.set('view engine',ejs)
-
-
+require('dotenv').config({path:'./config.env'})
 const path = require('path')
 const bp = require('body-parser')
-
 const getAccountNumber = require('./tools/genAccNo.js')
 const jwt = require('jsonwebtoken')
-
 const Customer = require('./models/Customer.js')
-
 const Transactions = require('./models/Transactions.js')
-
-
-
-
-
 app.use('/public',express.static(path.join(__dirname,'public')))
-
 app.use(bp.json());
 app.use(bp.urlencoded({ extended: true }));
-
 app.use(express.json())
 
+
+//Home Page
 app.get('/', (req,res) => {
     res.render('home-page.ejs')
 })
@@ -38,7 +25,6 @@ app.get('/', (req,res) => {
 app.post('/register', async(req,res) => {
     
     const accountNumber = getAccountNumber()
-    console.log('accountNumber',accountNumber)
     const {name,email,password} = req.body
     const customer = new Customer({"name":name,"email":email,"password":password,"accountNumber":accountNumber,"balance":10000})
     customer.save((err,data) => {
@@ -70,9 +56,8 @@ app.post('/login',(req,res) => {
             const enteredPassword = data[0].password;
             if(password == enteredPassword){
                 const userName = data[0].name;
-                var token = jwt.sign({email,userName},'mySecretKey')
-                console.log('token generated',token);
-            
+                var SECRET_KEY = process.env.SECRET_KEY;
+                var token = jwt.sign({email,userName},SECRET_KEY)
                 res.cookie('jwt',token , { httpOnly: true, secure: true, maxAge: 3600000 })
                 res.redirect('/dashboard')
             }
@@ -87,38 +72,39 @@ app.post('/login',(req,res) => {
 
 //Protected page
 app.get('/dashboard', verifyToken, async(req, res) => {
-    //console.log("req.user",req.user)
     const name = req.user
-    
-    
     res.render('dashboard.ejs',{user:name})
 })
 
+
 //To logout a user
 app.get('/logout',async(req, res) => {
-    
     return res.clearCookie('jwt').render('home-page.ejs');
 })
-
-
-
 
 
 //To check token
 function verifyToken(req,res,next){
     if(typeof req.headers.cookie == undefined){
-        res.sendStatus(400)
+        return res.sendStatus(400)
     }
     else{
         
         const cookie = req.headers.cookie;
-        if(cookie == undefined){
+       
+        if(!cookie){
             return res.send('Session Expired!!! Login Again');
         }
-        
-        const jwt_token = cookie.split("jwt")[1].split("=")[1];
-      
-        const isValid = jwt.verify(jwt_token,'mySecretKey')
+        try{
+            var jwt_token = cookie.split("jwt")[1].split("=")[1];
+        }
+        catch(err){
+            return res.send('You have logged Out!! Kindly Login Again')
+        }
+
+        var SECRET_KEY = process.env.SECRET_KEY;
+        const isValid = jwt.verify(jwt_token,SECRET_KEY);
+
         if(isValid){
             function parseJwt (jwt_token) {
                 return JSON.parse(Buffer.from(jwt_token.split('.')[1], 'base64').toString());
@@ -134,6 +120,8 @@ function verifyToken(req,res,next){
 
 }
 
+
+//To fetch balance of a user
 app.get('/balance',verifyToken,(req,res) => {
    
     const userName = req.user;
@@ -151,7 +139,6 @@ app.get('/balance',verifyToken,(req,res) => {
 
 //POST request to transfer Funds
 app.post('/transfer',verifyToken,(req,res)=>{
-   // console.log('in transfer post route')
     const benificiaryAcc = req.body.accountNo;
     const amount = req.body.amount;
     
@@ -164,7 +151,7 @@ app.post('/transfer',verifyToken,(req,res)=>{
         const senderAccNo = found.accountNumber;
         const senderName = found.name;
         if(parseInt(senderUserBal) < parseInt(amount)){
-            return res.send('Insuficciant Funds!!!')
+            return res.json({status:'failed',msg:'Insuficciant Funds!!!'})
         }
         
         Customer.findOne({accountNumber:benificiaryAcc},(err,benificiary) => {
@@ -172,7 +159,7 @@ app.post('/transfer',verifyToken,(req,res)=>{
                 console.log(err)
             }
             if(!benificiary){
-                return res.send('Account Not found!!!Please check Account Number.')
+                return res.json({status:'failed',msg:'Account Not found!!!Please check Account Number.'})
 
             }
             else{
@@ -183,7 +170,7 @@ app.post('/transfer',verifyToken,(req,res)=>{
                     if(err){
                         console.log(err)
                     }
-                    var dt = new Date().toDateString()
+                    var dt = new Date();
                     var userId = found._id.toString()
                     var benAccNo = benificiary.accountNumber;
                     var benName = benificiary.name;
@@ -192,7 +179,7 @@ app.post('/transfer',verifyToken,(req,res)=>{
                     saveTransaction(userId,dt,benAccNo,benName,0,amount);
 
                     saveReceiverTransaction(benId,dt,senderAccNo,senderName,amount);
-                    return res.send('Transaction Successful.');
+                    return res.json({status:'success',msg:'Transaction Successful.'})
                 })
             }
             
@@ -225,6 +212,7 @@ app.get('/transactions',(req,res) => {
         if(err){
             console.log(err)
         }
+        console.log('typeof all',typeof(all));
         res.send(all)
     })
 })
@@ -240,26 +228,73 @@ app.delete('/transactions',(req,res) => {
 })
 
 
-//To fetch transactions of a user
-app.get('/transaction',verifyToken,async(req,res)=>{
+//To fetch transactions of a user without date
+app.get('/transaction?',verifyToken,async(req,res)=>{
     const name = req.user;
     Customer.findOne({name:name},(err,found)=>{
         if(err){
             console.log(err)
         }
         const id = found._id.toString()
-        console.log('id',id);
+        
         Transactions.find({userId:id},(err,result)=>{
             if(err){
                 console.log(err)
             }
-            //console.log('result',result);
-            res.send(result);
-        })
-        
+           
+            return res.send(result);
+        })  
     })
    
 })
+
+//To fetch transactions of a user based on date
+
+app.get('/transactions/user?', verifyToken, (req,res)=>{
+    const name = req.user;
+    Customer.findOne({name:name},(err,found)=>{
+        if(err){
+            console.log(err)
+        }
+        var {from,to} = req.query;
+        const id = found._id.toString()
+        to = new Date(to)
+        to.setDate(to.getDate() + 1);
+
+        Transactions.find({date:{$gte:from,$lte:to},userId:id},(err,results)=>{
+            if(err){
+                console.log(err)
+            }
+            
+            return res.send(results)
+        }) 
+    })
+
+})
+
+//Check whether current date is including or not
+app.get('/dummy/transaction?', (req, res)=>{
+    var {id,from,to} = req.query;
+
+    to = new Date(to)
+
+    to.setDate(to.getDate() + 1);
+
+    console.log('id,from,to',id,from,to);
+
+    Transactions.find({date:{$gte:from,$lte:to},userId:id},(err,results)=>{
+        if(err){
+            console.log(err)
+        }
+        
+        res.send(results)
+        
+    }) 
+})
+
+
+
+
 
 
 //To save the transaction
@@ -269,24 +304,25 @@ const saveTransaction = (userId,dt,benAccNo,benName,received,sent) => {
         if(err){
             console.log(err)
         }
-        //console.log('Transaction saved...')
         return;
     })
 }
 
+
+//Deduce sender Balance
 const deduceSenderBal = (userName,balance,amount) => {
     var updated = parseInt(balance) - parseInt(amount)
     Customer.findOneAndUpdate({name:userName},{balance:updated},(err,updated)=>{
         if(err){
             console.log(err)
         }
-        //console.log('updated...')
+       
         return;
     })
 }
 
 
-//To fetch all users
+//FETCH all customers
 app.get('/customers',(req,res) => {
     Customer.find({},(err,data) => {
         if(err){
@@ -296,7 +332,7 @@ app.get('/customers',(req,res) => {
     })
 })
 
-//To delete all users
+//DELETE all customers
 app.delete('/customers',(req,res) => {
     Customer.deleteMany({},(err,deleted) => {
         if(err){
@@ -307,9 +343,11 @@ app.delete('/customers',(req,res) => {
 })
 
 
-app.listen(4060,(err) => {
+const port = process.env.PORT || 4060
+//PORT
+app.listen(port,(err) => {
     if(err){
         console.log(err)
     }
-    console.log('Server running on port 4060');
+    console.log(`Server running on port ${port}`);
 })
