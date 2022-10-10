@@ -13,7 +13,7 @@ document.getElementById('register-btn').onclick = () => {
         
         timeout: 1000,
         
-        url: 'http://localhost:4060/register', 
+        url: '/register', 
         
         success: function (data) {
            
@@ -32,32 +32,3 @@ document.getElementById('register-btn').onclick = () => {
     return;
 }
 
-/*
-document.getElementById('login-btn').onclick = () => {
-    
-    const email = document.getElementById('login-email').value
-    const password = document.getElementById('login-password').value
-    $.ajax({
-        type: 'GET',
-        data:  JSON.stringify({"email":email,"password":password}),
-        processData: false,
-        contentType: "application/json; charset=UTF-8",
-        timeout: 1000,
-        redirect:true,
-        url: 'http://localhost:4060/login', 
-        success: function (data) {
-            console.log('data',data)
-            document.getElementById('login_status_field').style.color = 'red';
-            document.getElementById('login_status_field').textContent = data;
-
-        },
-         error: function (error) {
-            console.log('in error in post login',error)
-            
-       }
-    })
-    
-    console.log('login form submitted....',email,password)
-}
-
-*/
