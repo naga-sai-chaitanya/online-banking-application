@@ -21,6 +21,12 @@ app.get('/', (req,res) => {
 })
 
 
+//Dummy function
+const someFun = () => {
+    console.log('Good Morning....');
+}
+
+
 //To resgister a Customer
 app.post('/register', async(req,res) => {
     
