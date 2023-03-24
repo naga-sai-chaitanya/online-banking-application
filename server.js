@@ -31,6 +31,12 @@ const anotherFun = () => {
     console.log('good evening');
 }
 
+//created another function in vs code
+
+const differentFun = () => {
+    consolel.log('good night');
+}
+
 
 //To resgister a Customer
 app.post('/register', async(req,res) => {
