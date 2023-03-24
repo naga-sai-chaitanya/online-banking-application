@@ -26,6 +26,11 @@ const someFun = () => {
     console.log('Good Morning....');
 }
 
+//created a function in github
+const anotherFun = () => {
+    console.log('good evening');
+}
+
 
 //To resgister a Customer
 app.post('/register', async(req,res) => {
