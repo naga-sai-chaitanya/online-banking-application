@@ -37,6 +37,13 @@ const differentFun = () => {
     consolel.log('good night');
 }
 
+//adding dynamic functionality
+const updateData = (data) => {
+    setTimeout(()=>{
+        console.log('Data updated.....')
+    },3000)
+    
+}
 
 //To resgister a Customer
 app.post('/register', async(req,res) => {
